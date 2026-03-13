@@ -68,15 +68,17 @@ awk -F'\t' '
   NR==1 { next }                       
   ($161 >= 55 && $161 <= 69) && ($133 >= 11 && $133 <= 24)
 ' raw_data/metadata.tsv | wc -l
-# This showed no match
-# checking which and how many samples are around "Sweden" found in the dataset
-awk -F'\t' '
+````
+This showed no match
+checking which and how many samples are around "Sweden" found in the dataset
+````bash
+awk -F'\t' '  # count samples at certain coordinates
 NR>1 &&
 ($161+0)>=54 && ($161+0)<=72 &&
 ($133+0)>=5  && ($133+0)<=32
 ' raw_data/metadata.tsv | wc -l
 
-awk -F'\t' '
+awk -F'\t' ' # name samples at certain coordinates
 NR>1 &&
 ($161+0)>=54 && ($161+0)<=72 &&
 ($133+0)>=5  && ($133+0)<=32 {
@@ -84,12 +86,14 @@ NR>1 &&
 }
 ' raw_data/metadata.tsv | sort | uniq -c | sort -nr
 ````
+Outcome:
 - 315 Denmark: Aarhus
 - 62 Finland
 - 60 Finland: North Karelia
 - 52 Russia: Republic of Karelia, Pitkaranta
 - total 489 samples
 
+=========================================================
 1. Filter data set 
 Install the world package from natural earth (required for geopandas)
 ````bash
