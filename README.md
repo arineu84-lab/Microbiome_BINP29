@@ -1,12 +1,9 @@
-Visualising the Skin Microbiome
+## Visualising geographical distribution of a Skin Microbiome
 
 Author: Ariane Neumann
 Date: 2026-03-09
 Version: 1.0
-Title: "Skin Microbiome"
-#===============================================================
-Description: 
-In this project, I received a list of IDs for skin microbiome samples. The data connected to the sample IDs contain metagenome information, like location of sampling, fastq info and more.
+Description:  In this project, I received a list of IDs for skin microbiome samples. The data connected to the sample IDs contain metagenome information, like location of sampling, fastq info and more.
 (An important note is here, that the data analysed are raw reads. Usually, one should clean them up before downstream analysis. A pipeline for the clean-up will be provided in this repository)
 
 Tasks:
@@ -26,21 +23,12 @@ select_samples.py
 pull_fastq.sh
 kraken2.py
 krona_bracken.py
-mapwithkrona.py 
+interactive_map.py 
 
 Input:
 NCBI.skin.metagenome.sampleID.txt
 metadata.tsv
 
-Output:
-filtered_meta.tsv
-country_counts_from_coords.tsv
-unmatched_points.tsv
-country_distribution_from_coords.png
-country_choropleth.png
-sample_locations_map.html
-selected_runs_from_coords.tsv
-filtered_with_countries.tsv
 
 
 ## ------ 0.Setting up the working environment ---------
