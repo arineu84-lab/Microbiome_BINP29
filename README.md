@@ -22,30 +22,23 @@ Input:
 NCBI.skin.metagenome.sampleID.txt
 metadata.tsv
 
------- 0.Setting up the working environment ---------
-´´´bash
-# Log into server and create new directory
-mkdir Microbiome
-mkdir raw_data scripts plots data notes # subdirectories
+Setting up the working environment 
+Use txt file get the NCBI metadata, change the sample IDs (SAMEA121737266) to general name.
+First download and store output in new tsv file, then later can be filtered
+Want to have a file containing one time header, then all samples information
 
-# connect to Git
-git init
-
-# create .gitignore
-nano .gitignore
-´´´
-
-# Use txt file get the NCBI metadata, change the sample IDs (SAMEA121737266) to general name.
-# First download and store output in new tsv file, then later can be filtered
-# Want to have a file containing one time header, then all samples information
-
-# Create conda environment
+Create conda environment
+````bash
 conda create -n skin_microbes
+````
 
-# Create an empty output file
+Create an empty output file
+````bash
 > metadata.tsv
+````
 
-# Fetching all meta data and save into new tsv file
+Fetching all meta data and save into new tsv file
+````bash
 first=1
 while read ID; do
     echo "Fetching metadata for $ID ..."
@@ -60,15 +53,17 @@ while read ID; do
             | tail -n +2 >> metadata.tsv
     fi
 done < NCBI.skin.metagenome.sampleID.txt
-# OBS: Here only meta data from 29k samples were used!
+````
+OBS: Here only meta data from 29k samples were used!
 
-# Get column numbers of NCBI metadata
+Get column numbers of NCBI metadata
+````bash
 head -n2 raw_data/metadata.tsv | sed 's/\t/\n/g' | nl -ba
+````
 
-# remember to add changes to git (or remove)
-
-# The initial plan was to later select 3 samples from Sweden, for this the metadata.tsv
-# file was checked for certain longitudinal and latitudinal coordinates
+The initial plan was to later select 3 samples from Sweden, for this the metadata.tsv
+file was checked for certain longitudinal and latitudinal coordinates
+````bash
 awk -F'\t' '
   NR==1 { next }                       
   ($161 >= 55 && $161 <= 69) && ($133 >= 11 && $133 <= 24)
@@ -88,43 +83,49 @@ NR>1 &&
     print $55
 }
 ' raw_data/metadata.tsv | sort | uniq -c | sort -nr
+````
+- 315 Denmark: Aarhus
+- 62 Finland
+- 60 Finland: North Karelia
+- 52 Russia: Republic of Karelia, Pitkaranta
+- total 489 samples
 
-# 315 Denmark: Aarhus
-# 62 Finland
-# 60 Finland: North Karelia
-# 52 Russia: Republic of Karelia, Pitkaranta
-# total 489 samples
-
-## -------- 1. Filter data set -------------------
-# Install the world package from natural earth (required for geopandas)
+1. Filter data set 
+Install the world package from natural earth (required for geopandas)
+````bash
 wget https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip
 unzip ne_110m_admin_0_countries.zip
-
-# write python script to filter meta data for certain selected columns
-# e.g. longitude and latitude coordinates and well as body site
+````
+write python script to filter meta data for certain selected columns
+e.g. longitude and latitude coordinates and well as body site
+````bash
 python scripts/filter_columns.py 
 
 # check that all columns contain something
 head -n2 raw_data/filtered_meta.tsv | sed 's/\t/\n/g' | nl -ba
+````
 
-## ---------- 2. Geographical distribution of all samples -------------------
-# Next, filter for the countries in order to plot geographical distribution of all
-# samples. For this use a script that computes the number of samples per country
-# from lat/lon coordinates by reverse-geocoding points against Natural Earth country polygons.
+2. Geographical distribution of all samples 
+Next, filter for the countries in order to plot geographical distribution of all
+samples. For this use a script that computes the number of samples per country
+from lat/lon coordinates by reverse-geocoding points against Natural Earth country polygons.
+````bash
 python scripts/country_distribution.py 
-
-## --------- 3. Distribution of sequencing types ----------------------
-# First check for the different sequencing types in column 6
+````
+3. Distribution of sequencing types 
+First check for the different sequencing types in column 6
+````bash
 cut -f6 raw_data/filtered_meta.tsv | sort | uniq -c
 
 # Based on previous discussion, it was decided here to continue with
 # the 16S (another student will focus on shotgun).
 conda install anaconda::seaborn # required for plotting
 python scripts/sequence_type.py
-
-## ------- 4. Taxonomic profiling of selected samples ------
-# this script assigns a country to each sample using its coordinates 
-# (reverse‑geocoding, which convert lat/lon columns to a country)
+````
+4. Taxonomic profiling of selected samples 
+this script assigns a country to each sample using its coordinates 
+(reverse‑geocoding, which convert lat/lon columns to a country)
+````bash
 python scripts/select_samples.py 
 
 # download the selected fastq files using bash script (in data/fastq)
@@ -156,9 +157,11 @@ python scripts/kraken2.py
 # check all files in results/
 # Need to check that all taxonomy levels are available
 # this created kraken2 and bracken tsv files for later analysis
+````
 
-## ----------- 5. Krona and taxonomy lineage ------------
-# install taxonkit and update python script to create krona.tsv
+5. Krona and taxonomy lineage 
+````bash
+install taxonkit and update python script to create krona.tsv
 conda install bioconda::taxonkit
 python scripts/krona_bracken.py 
 # be sure that Krona taxonomy is installed, otherwise use
@@ -172,11 +175,13 @@ for f in results/krona/*_krona.tsv; do
  paste <(cut -f1 "$f") <(cut -f2 "$f" | taxonkit lineage | cut -f2-) \
     > "results/lineage/${s}_lineage.tsv"
 done
-
-## ------- 6. Integrate Krona plots into interactive map --------- 
-# Run script for interactive map using folium
+````
+6. Integrate Krona plots into interactive map
+Run script for interactive map using folium
+````bash
 pip install folium
 python scripts/interactive_map.py 
 
 # download html files to local computer
 scp -r user@server/results/ .
+````
