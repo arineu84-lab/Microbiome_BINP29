@@ -17,10 +17,13 @@ Tasks:
 7. Integrate this with the interactive map so that clicking on a sample location opens the Krona plot showing its microbiome composition (this will be done for only the three samples).
 
 Input:
+
 NCBI.skin.metagenome.sampleID.txt
+
 metadata.tsv
 
 Setting up the working environment 
+
 Use txt file get the NCBI metadata, change the sample IDs (SAMEA121737266) to general name.
 First download and store output in new tsv file, then later can be filtered
 
