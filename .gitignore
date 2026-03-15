@@ -5,26 +5,16 @@ data/
 # Raw sequencing data
 raw_data/
 
-# Temporary files
-*.tmp
-*.log
-
 # Results
 results/
 
 # Large intermediate files
-*.sam
-*.bam
 *.kraken
 *.kreport
 notes/
 
-# Plots (optional if auto-generated)
+# Plots 
 plots/
-
-# Python cache
-__pycache__/
-*.pyc
 
 # OS files
 .DS_Store
