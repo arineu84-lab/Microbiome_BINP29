@@ -26,6 +26,8 @@ metadata.tsv
 
 Versions:
 
+Available in environment.yaml file
+
 Setting up the working environment by creating conda environment
 ````bash
 conda create -n skin_microbes
