@@ -31,7 +31,7 @@ def main():
     text_cols = [c for c in df.columns if c not in ["lat", "lon", "run_accession", "sample_accession", "country"]]
     df["_concat"] = df[text_cols].fillna("").agg(" ".join, axis=1).str.lower()
 
-    # --- REMOVE DOOR HANDLE SAMPLES ---
+    # remove door handle samples, as they impact "hand" selection
     before = len(df)
     df = df[~df["_concat"].str.contains("door handle", case=False, na=False)]
     removed = before - len(df)
