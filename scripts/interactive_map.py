@@ -5,9 +5,6 @@ from pathlib import Path
 import folium
 import pandas as pd
 
-# ----------------------------------------------------
-# paths (all lowercase, all relative)
-# ----------------------------------------------------
 root = Path(".")  # assume script is run from project root
 
 all_meta   = root / "raw_data"   / "filtered_meta.tsv"
@@ -16,30 +13,24 @@ geojson    = root / "data"       / "ne_countries.geojson"
 krona_dir  = root / "results"    / "krona_html"
 out_html   = root / "results"    / "final_interactive_map.html"
 
-# ----------------------------------------------------
-# load ALL metadata, filter to amplicon (16S)
-# ----------------------------------------------------
+
+# load metadata, filter to amplicon (16S)
 df_all = pd.read_csv(all_meta, sep="\t", dtype=str)
 
-country_col = (
-    "country_from_coords"
+country_col = ("country_from_coords"
     if "country_from_coords" in df_all.columns
-    else "country"
-)
+    else "country")
 
 df_amp = df_all[df_all["library_strategy"] == "AMPLICON"].copy()
 
 # count amplicon samples by country
-counts = (
-    df_amp.groupby(country_col)
+counts = (df_amp.groupby(country_col)
           .size()
           .reset_index(name="count")
-          .rename(columns={country_col: "country"})
-)
+          .rename(columns={country_col: "country"}))
 
-# ----------------------------------------------------
+
 # load selected samples
-# ----------------------------------------------------
 df_sel = pd.read_csv(sel_meta, sep="\t", dtype=str)
 
 # ensure numeric coords
@@ -53,17 +44,15 @@ site_color = {
     "hand": "red",
     "palm": "orange",
     "skin_other": "blue",
-    "unknown": "gray",
-}
+    "unknown": "gray",}
 
 def pick_color(label: str) -> str:
     if not isinstance(label, str):
         return "gray"
     return site_color.get(label.strip().lower(), "gray")
 
-# ----------------------------------------------------
+
 # load geojson and set stable join key
-# ----------------------------------------------------
 with open(geojson, "r") as f:
     gj = json.load(f)
 
@@ -75,25 +64,21 @@ for feature in gj["features"]:
         or props.get("name")
         or props.get("NAME")
         or props.get("NAME_EN")
-        or "UNKNOWN"
-    )
+        or "UNKNOWN")
     feature["properties"] = props
 
-# ----------------------------------------------------
-# build the map
-# ----------------------------------------------------
+
+# generate folium map
 m = folium.Map(
     location=[20, 0],
     zoom_start=2,
-    tiles="CartoDB positron"
-)
+    tiles="CartoDB positron")
 
 folium.TileLayer("OpenStreetMap").add_to(m)
 folium.TileLayer("CartoDB dark_matter").add_to(m)
 
-# ----------------------------------------------------
-# choropleth for 16S counts
-# ----------------------------------------------------
+
+# build choropleth for 16S counts
 palette = "PuBuGn"   # choose any: YlOrRd, OrRd, BuPu, YlGn, BuGn, etc.
 
 choropleth = folium.Choropleth(
@@ -108,22 +93,17 @@ choropleth = folium.Choropleth(
     name="16S amplicon per country",
     legend_name="16S samples per country",
     overlay=True,
-    control=True,
-).add_to(m)
+    control=True,).add_to(m)
 
 tooltip = folium.GeoJsonTooltip(
     fields=["country_key"],
-    aliases=["country:"],
-)
+    aliases=["country:"],)
 tooltip.add_to(choropleth.geojson)
 
-# ----------------------------------------------------
 # selected samples with krona popups
-# ----------------------------------------------------
 sel_layer = folium.FeatureGroup(
     name="selected samples (krona plots)",
-    show=True
-)
+    show=True)
 
 for _, row in df_sel.iterrows():
 
@@ -142,7 +122,7 @@ for _, row in df_sel.iterrows():
     except Exception:
         relative_link = krona_file.name
 
-    # PROPER ANCHOR TAG
+    # create anchor tag
     if krona_file.exists():
         link_html = f"<a href='{relative_link}' target='_blank'>open krona plot</a>"
     else:
@@ -169,9 +149,7 @@ for _, row in df_sel.iterrows():
 
 sel_layer.add_to(m)
 
-# ----------------------------------------------------
 # legend for selected sample colors
-# ----------------------------------------------------
 legend_html = """
 <div style="
   position: fixed;
@@ -189,9 +167,7 @@ legend_html = """
 """
 m.get_root().html.add_child(folium.Element(legend_html))
 
-# ----------------------------------------------------
 # save map
-# ----------------------------------------------------
 out_html.parent.mkdir(parents=True, exist_ok=True)
 m.save(str(out_html))
 
