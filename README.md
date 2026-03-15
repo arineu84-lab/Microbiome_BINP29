@@ -69,7 +69,8 @@ awk -F'\t' '
   ($161 >= 55 && $161 <= 69) && ($133 >= 11 && $133 <= 24)
 ' raw_data/metadata.tsv | wc -l
 ````
-This showed no match
+This showed no match 
+
 checking which and how many samples are around "Sweden" found in the dataset
 ````bash
 awk -F'\t' '  # count samples at certain coordinates
@@ -95,6 +96,7 @@ Outcome:
 
 =========================================================
 1. Filter data set 
+
 Install the world package from natural earth (required for geopandas)
 ````bash
 wget https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip
@@ -110,6 +112,7 @@ head -n2 raw_data/filtered_meta.tsv | sed 's/\t/\n/g' | nl -ba
 ````
 
 2. Geographical distribution of all samples 
+
 Next, filter for the countries in order to plot geographical distribution of all
 samples. For this use a script that computes the number of samples per country
 from lat/lon coordinates by reverse-geocoding points against Natural Earth country polygons.
@@ -117,6 +120,7 @@ from lat/lon coordinates by reverse-geocoding points against Natural Earth count
 python scripts/country_distribution.py 
 ````
 3. Distribution of sequencing types 
+
 First check for the different sequencing types in column 6
 ````bash
 cut -f6 raw_data/filtered_meta.tsv | sort | uniq -c
@@ -127,6 +131,7 @@ conda install anaconda::seaborn # required for plotting
 python scripts/sequence_type.py
 ````
 4. Taxonomic profiling of selected samples 
+
 this script assigns a country to each sample using its coordinates 
 (reverse‑geocoding, which convert lat/lon columns to a country)
 ````bash
@@ -163,7 +168,7 @@ python scripts/kraken2.py
 # this created kraken2 and bracken tsv files for later analysis
 ````
 
-5. Krona and taxonomy lineage 
+5. Krona and taxonomy lineage using bracken
 ````bash
 install taxonkit and update python script to create krona.tsv
 conda install bioconda::taxonkit
@@ -181,6 +186,7 @@ for f in results/krona/*_krona.tsv; do
 done
 ````
 6. Integrate Krona plots into interactive map
+
 Run script for interactive map using folium
 ````bash
 pip install folium
