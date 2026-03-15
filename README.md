@@ -69,9 +69,9 @@ awk -F'\t' '
   ($161 >= 55 && $161 <= 69) && ($133 >= 11 && $133 <= 24)
 ' raw_data/metadata.tsv | wc -l
 ````
-This showed no match 
+This showed no match for Sweden
 
-checking which and how many samples are around "Sweden" found in the dataset
+Therefore, it was decided to check which and how many samples are around "Sweden" found in the dataset
 ````bash
 awk -F'\t' '  # count samples at certain coordinates
 NR>1 &&
@@ -93,6 +93,8 @@ Outcome:
 - 60 Finland: North Karelia
 - 52 Russia: Republic of Karelia, Pitkaranta
 - total 489 samples
+
+Based on these findings, other samples were selected. While samples from neighbour countries were available, the interest was on the skin microbiome with focus on hand and palm. These body locations were not found for these countries, thus downstream analysis was performed with other european countries. However, based on the coordinates and body_sites, this selection can always be adapted to the research question. 
 
 =========================================================
 1. Filter data set 
@@ -132,7 +134,7 @@ python scripts/sequence_type.py
 ````
 4. Taxonomic profiling of selected samples 
 
-this script assigns a country to each sample using its coordinates 
+This script assigns a country to each sample using its coordinates 
 (reverse‑geocoding, which convert lat/lon columns to a country)
 ````bash
 python scripts/select_samples.py 
@@ -149,7 +151,7 @@ conda install bioconda::bracken # Bayesian Reestimation of Abundance with KrakEN
 conda install bioconda::krona
 mkdir results/kraken2 results/bracken results/krona 
 
-# Also need a SILVA data base
+# Also need a SILVA data base to be created and run properly
 mkdir -p db
 kraken2-build --special silva --db silva16s --threads 8
 kraken2-build --build --db silva16s --threads 8
@@ -170,9 +172,10 @@ python scripts/kraken2.py
 
 5. Krona and taxonomy lineage using bracken
 ````bash
-install taxonkit and update python script to create krona.tsv
+# install taxonkit and update python script to create krona.tsv
 conda install bioconda::taxonkit
 python scripts/krona_bracken.py 
+
 # be sure that Krona taxonomy is installed, otherwise use
 updateTaxonomy.sh
 # then run script again
