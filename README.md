@@ -22,15 +22,11 @@ NCBI.skin.metagenome.sampleID.txt
 
 metadata.tsv
 
-Setting up the working environment 
 
-Use txt file get the NCBI metadata, change the sample IDs (SAMEA121737266) to general name.
-First download and store output in new tsv file, then later can be filtered
 
 Versions:
 
-
-Create conda environment
+Setting up the working environment by creating conda environment
 ````bash
 conda create -n skin_microbes
 ````
