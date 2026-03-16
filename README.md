@@ -4,8 +4,10 @@ Author: Ariane Neumann
 
 Date: 2026-03-09
 
-Description:  In this project, I received a list of IDs for skin microbiome samples. The data connected to the sample IDs contain metagenome information, like location of sampling, fastq info and more.
-(An important note is here, that the data analysed are raw reads. Usually, one should clean them up before downstream analysis. A pipeline for the clean-up will be provided in this repository)
+Description:  SkinMicroMap is a pipeline designed for understanding geographical distribution of metagenomic microbiome data and subsequent analysis of the composition of the microbiome. 
+
+In this project, I received a list of IDs for skin microbiome samples. The data connected to the sample IDs, contain metagenome information, like location of sampling, fastq info and more.
+(An important note is here, that the data analysed are raw reads. Usually, one should clean them up before downstream analysis. A pipeline for the clean-up will be provided elsewhere)
 
 Tasks:
 1. Extract metadata and visualise the geographical distribution of samples (number of samples from each country).
