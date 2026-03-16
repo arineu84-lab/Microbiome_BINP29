@@ -1,4 +1,4 @@
-## Visualising geographical distribution of a Skin Microbiome
+## SkinMicroMap - Visualisation of Skin Microbiome metagenomics
 
 Author: Ariane Neumann
 
