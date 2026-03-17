@@ -1,10 +1,7 @@
 ## SkinMicroMap - Visualisation of Skin Microbiome metagenomics
 
-Author: Ariane Neumann
 
-Date: 2026-03-09
-
-Description:  SkinMicroMap is a pipeline designed for understanding geographical distribution of metagenomic microbiome data and subsequent analysis of the composition of the microbiome. 
+SkinMicroMap is a pipeline designed for understanding geographical distribution of metagenomic microbiome data and subsequent analysis of the composition of the microbiome. 
 
 In this project, I received a list of IDs for skin microbiome samples. The data connected to the sample IDs, contain metagenome information, like location of sampling, fastq info and more.
 (An important note is here, that the data analysed are raw reads. Usually, one should clean them up before downstream analysis. A pipeline for the clean-up will be provided elsewhere)
@@ -25,10 +22,7 @@ NCBI.skin.metagenome.sampleID.txt
 metadata.tsv
 
 
-
-Versions:
-
-Available in environment.yaml file
+All tools are listed with version in environment.yaml file
 
 Setting up the working environment by creating conda environment
 ````bash
