@@ -34,13 +34,13 @@ def main():
     text_cols = [c for c in df.columns if c not in ["lat", "lon", "run_accession", "sample_accession", "country"]]
     df["_concat"] = df[text_cols].fillna("").agg(" ".join, axis=1).str.lower()
 
-    # optional: remove known off-targets (example retained from your script)
+    # remove known off-targets 
     before = len(df)
     df = df[~df["_concat"].str.contains("door handle", na=False)]
     removed = before - len(df)
     print(f"[info] removed {removed} 'door handle' rows")
 
-    # extended keyword detection (all lowercase)
+    # extended keyword detection 
     df["k_palm"]    = df["_concat"].str.contains(r"\bpalm\b", na=False)
     df["k_hand"]    = df["_concat"].str.contains(r"\bhand\b", na=False)
     df["k_foot"]    = df["_concat"].str.contains(r"\bfoot\b|\bfeet\b|\bplantar\b", na=False)
