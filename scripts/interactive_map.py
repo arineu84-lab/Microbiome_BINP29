@@ -1,202 +1,145 @@
 #!/usr/bin/env python3
-
-import json
 from pathlib import Path
-import folium
 import pandas as pd
+import folium
+from folium.plugins import MarkerCluster
 
-# ----------------------------------------------------
-# paths (all lowercase, all relative)
-# ----------------------------------------------------
-root = Path(".")  # assume script is run from project root
+root = Path(".")
+all_meta  = root / "raw_data" / "filtered_meta.tsv"
+sel_meta  = root / "raw_data" / "selected_samples.tsv"
+krona_dir = root / "results" / "krona_html"
+out_html  = root / "results" / "map" / "interactive_map.html"
 
-all_meta   = root / "raw_data"   / "filtered_meta.tsv"
-sel_meta   = root / "raw_data"   / "selected_samples.tsv"
-geojson    = root / "data"       / "ne_countries.geojson"
-krona_dir  = root / "results"    / "krona_html"
-out_html   = root / "results"    / "final_interactive_map.html"
-
-# ----------------------------------------------------
-# load ALL metadata, filter to amplicon (16S)
-# ----------------------------------------------------
+# load metadata
 df_all = pd.read_csv(all_meta, sep="\t", dtype=str)
+for col in ("lat", "lon"):
+    df_all[col] = pd.to_numeric(df_all[col], errors="coerce")
+df_all = df_all.dropna(subset=["lat", "lon"]).copy()
 
-country_col = (
-    "country_from_coords"
-    if "country_from_coords" in df_all.columns
-    else "country"
-)
+# 16s only
+df_all["library_strategy"] = df_all["library_strategy"].astype(str).str.lower()
+df16 = df_all[df_all["library_strategy"] == "amplicon"].copy()
 
-df_amp = df_all[df_all["library_strategy"] == "AMPLICON"].copy()
+# choose country column if available
+country_col = "country_from_coords" if "country_from_coords" in df16.columns else "country"
 
-# count amplicon samples by country
-counts = (
-    df_amp.groupby(country_col)
-          .size()
-          .reset_index(name="count")
-          .rename(columns={country_col: "country"})
-)
+# colors by body_site_label
+COLOR = {
+    "hand": "#e41a1c",
+    "palm": "#ff7f00",
+    "foot": "#377eb8",
+    "face": "#984ea3",
+    "armpit": "#4daf4a",
+    "scalp": "#a65628",
+    "forearm": "#f781bf",
+    "skin_other": "#7f7f7f",
+    "other": "#cccccc",
+}
+def pick_color(label: str) -> str:
+    if not isinstance(label, str): return "#cccccc"
+    return COLOR.get(label.strip().lower(), "#cccccc")
 
-# ----------------------------------------------------
-# load selected samples
-# ----------------------------------------------------
+# base map
+m = folium.Map(location=[20, 0], zoom_start=2, tiles="cartodb positron")
+folium.TileLayer("openstreetmap").add_to(m)
+folium.TileLayer("cartodb dark_matter").add_to(m)
+
+# layer: all 16s points (clustered)
+cluster = MarkerCluster(name="all 16s points (clustered)", show=True)
+for _, row in df16.iterrows():
+    lat, lon = float(row["lat"]), float(row["lon"])
+    run  = row.get("run_accession", "na")
+    body = (row.get("body_site_label") or "other").strip().lower()
+    country = row.get(country_col, row.get("country", "unknown"))
+    color = pick_color(body)
+    html = f"<b>{run}</b><br>country: {country}<br>body site: {body}"
+    folium.CircleMarker(
+        location=[lat, lon],
+        radius=5,
+        color="#333333",
+        weight=1,
+        fill=True,
+        fill_opacity=0.9,
+        fill_color=color,
+        tooltip=f"{run} ({country}, {body})",
+        popup=folium.Popup(html, max_width=320),
+    ).add_to(cluster)
+m.add_child(cluster)
+
+# layer: selected samples with krona links (3 from denmark)
+# layer: selected samples with krona links (3 from denmark)
 df_sel = pd.read_csv(sel_meta, sep="\t", dtype=str)
-
-# ensure numeric coords
 for col in ("lat", "lon"):
     df_sel[col] = pd.to_numeric(df_sel[col], errors="coerce")
-
 df_sel = df_sel.dropna(subset=["lat", "lon"]).copy()
 
-# color for selected samples (body site)
-site_color = {
-    "hand": "red",
-    "palm": "orange",
-    "skin_other": "blue",
-    "unknown": "gray",
-}
-
-def pick_color(label: str) -> str:
-    if not isinstance(label, str):
-        return "gray"
-    return site_color.get(label.strip().lower(), "gray")
-
-# ----------------------------------------------------
-# load geojson and set stable join key
-# ----------------------------------------------------
-with open(geojson, "r") as f:
-    gj = json.load(f)
-
-for feature in gj["features"]:
-    props = feature.get("properties", {})
-    props["country_key"] = (
-        props.get("ADMIN")
-        or props.get("admin")
-        or props.get("name")
-        or props.get("NAME")
-        or props.get("NAME_EN")
-        or "UNKNOWN"
-    )
-    feature["properties"] = props
-
-# ----------------------------------------------------
-# build the map
-# ----------------------------------------------------
-m = folium.Map(
-    location=[20, 0],
-    zoom_start=2,
-    tiles="CartoDB positron"
-)
-
-folium.TileLayer("OpenStreetMap").add_to(m)
-folium.TileLayer("CartoDB dark_matter").add_to(m)
-
-# ----------------------------------------------------
-# choropleth for 16S counts
-# ----------------------------------------------------
-palette = "PuBuGn"   # choose any: YlOrRd, OrRd, BuPu, YlGn, BuGn, etc.
-
-choropleth = folium.Choropleth(
-    geo_data=gj,
-    data=counts,
-    columns=["country", "count"],
-    key_on="feature.properties.country_key",
-    fill_color=palette,
-    fill_opacity=0.85,
-    line_opacity=0.3,
-    nan_fill_color="lightgray",
-    name="16S amplicon per country",
-    legend_name="16S samples per country",
-    overlay=True,
-    control=True,
-).add_to(m)
-
-tooltip = folium.GeoJsonTooltip(
-    fields=["country_key"],
-    aliases=["country:"],
-)
-tooltip.add_to(choropleth.geojson)
-
-# ----------------------------------------------------
-# selected samples with krona popups
-# ----------------------------------------------------
-sel_layer = folium.FeatureGroup(
-    name="selected samples (krona plots)",
-    show=True
-)
-
+sel_layer = folium.FeatureGroup(name="selected (krona popups)", show=True)
 for _, row in df_sel.iterrows():
-
-    sample = row["run_accession"]
-    lat = float(row["lat"])
-    lon = float(row["lon"])
-    country = row.get("country_from_coords", row.get("country", "unknown"))
-    body = (row.get("body_site_label") or "unknown").strip().lower()
+    run = row["run_accession"]
+    lat, lon = float(row["lat"]), float(row["lon"])
+    body = (row.get("body_site_label") or "other").strip().lower()
+    country = row.get(country_col, row.get("country", "unknown"))
     color = pick_color(body)
 
-    krona_file = krona_dir / f"{sample}.krona.html"
-
-    # compute relative path so it works on mac/linux/windows
+    krona_file = krona_dir / f"{run}.krona.html"
     try:
-        relative_link = krona_file.relative_to(out_html.parent)
+        # relative path from results/map/interactive_map.html to krona_html/<run>.krona.html
+        rel = krona_file.relative_to(out_html.parent)
     except Exception:
-        relative_link = krona_file.name
+        # conservative fallback if relative_to() cannot be computed
+        rel = f"../krona_html/{run}.krona.html"
 
-    # PROPER ANCHOR TAG
+    # >>> paste this exact part <<<
     if krona_file.exists():
-        link_html = f"<a href='{relative_link}' target='_blank'>open krona plot</a>"
+        link = f"<a href='{rel}' target='_blank'>open krona plot</a>"
     else:
-        link_html = f"<i>(missing: {relative_link})</i>"
+        link = f"<i>(krona not found: {rel})</i>"
+    # >>> end paste <<<
 
-    popup_html = f"""
-    <b>{sample}</b><br>
-    country: {country}<br>
-    body site: {body}<br>
-    {link_html}
-    """
+    popup_html = (
+        f"<b>{run}</b><br>"
+        f"country: {country}<br>"
+        f"body site: {body}<br>"
+        f"{link}"
+    )
 
     folium.CircleMarker(
         location=[lat, lon],
         radius=8,
-        color="black",
+        color="#000000",
         weight=2,
         fill=True,
+        fill_opacity=1.0,
         fill_color=color,
-        fill_opacity=0.95,
-        tooltip=f"{sample} ({country}, {body})",
-        popup=folium.Popup(popup_html, max_width=320),
+        tooltip=f"{run} (selected)",
+        popup=folium.Popup(popup_html, max_width=340),
     ).add_to(sel_layer)
 
 sel_layer.add_to(m)
 
-# ----------------------------------------------------
-# legend for selected sample colors
-# ----------------------------------------------------
+# legend
 legend_html = """
 <div style="
-  position: fixed;
-  bottom: 20px; left: 20px; z-index: 9999;
-  background: white; padding: 10px 12px;
-  border: 1px solid #bbb; border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  font-size: 13px;">
-<b>selected: body site</b><br>
-<span style='display:inline-block;width:10px;height:10px;background:red;border:1px solid #333;margin-right:6px;'></span> hand<br>
-<span style='display:inline-block;width:10px;height:10px;background:orange;border:1px solid #333;margin-right:6px;'></span> palm<br>
-<span style='display:inline-block;width:10px;height:10px;background:blue;border:1px solid #333;margin-right:6px;'></span> skin_other<br>
-<span style='display:inline-block;width:10px;height:10px;background:gray;border:1px solid #333;margin-right:6px;'></span> unknown<br>
-</div>
-"""
+ position: fixed; bottom: 20px; left: 20px; z-index: 9999;
+ background: white; padding: 10px 12px; border: 1px solid #bbb; border-radius: 8px;
+ box-shadow: 0 1px 4px rgba(0,0,0,0.3); font-size: 13px;">
+<b>body site</b><br>
+<span style='display:inline-block;width:10px;height:10px;background:#e41a1c;border:1px solid #333;margin-right:6px;'></span> hand<br>
+<span style='display:inline-block;width:10px;height:10px;background:#ff7f00;border:1px solid #333;margin-right:6px;'></span> palm<br>
+<span style='display:inline-block;width:10px;height:10px;background:#377eb8;border:1px solid #333;margin-right:6px;'></span> foot<br>
+<span style='display:inline-block;width:10px;height:10px;background:#984ea3;border:1px solid #333;margin-right:6px;'></span> face<br>
+<span style='display:inline-block;width:10px;height:10px;background:#4daf4a;border:1px solid #333;margin-right:6px;'></span> armpit<br>
+<span style='display:inline-block;width:10px;height:10px;background:#a65628;border:1px solid #333;margin-right:6px;'></span> scalp<br>
+<span style='display:inline-block;width:10px;height:10px;background:#f781bf;border:1px solid #333;margin-right:6px;'></span> forearm<br>
+<span style='display:inline-block;width:10px;height:10px;background:#7f7f7f;border:1px solid #333;margin-right:6px;'></span> skin_other<br>
+<span style='display:inline-block;width:10px;height:10px;background:#cccccc;border:1px solid #333;margin-right:6px;'></span> other<br>
+</div>"""
 m.get_root().html.add_child(folium.Element(legend_html))
 
-# ----------------------------------------------------
-# save map
-# ----------------------------------------------------
+# save
 out_html.parent.mkdir(parents=True, exist_ok=True)
 m.save(str(out_html))
-
-print("[ok] final interactive map saved to:", out_html)
-print("copy this file AND the krona_html/ folder to your mac for popups to work.")
-print("or serve locally with:")
+print("[ok] interactive map:", out_html)
+print("tip: serve locally to ensure krona popups open:")
 print("  cd results && python3 -m http.server 8000")
-print("  open http://localhost:8000/final_interactive_map.html")
+print("  open http://localhost:8000/map/interactive_map.html")
