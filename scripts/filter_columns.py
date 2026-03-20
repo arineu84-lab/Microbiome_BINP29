@@ -5,7 +5,7 @@ from pathlib import Path
 in_path = Path("raw_data/metadata.tsv")
 out_path = Path("raw_data/filtered_meta.tsv")
 
-# minimal columns we try to keep (lowercase names)
+# minimal columns 
 cols_keep = [
     "run_accession", "sample_accession", "country", "lat", "lon",
     "library_strategy", "tax_lineage",
@@ -21,11 +21,11 @@ def first_nonnull(*vals):
 def main():
     df = pd.read_csv(in_path, sep="\t", dtype=str, low_memory=False)
 
-    # keep only columns that exist (safe subset)
+    # keep only columns that exist 
     have = [c for c in cols_keep if c in df.columns]
     df = df[have].copy()
 
-    # numeric coords (keep original values if already numeric strings)
+    # numeric coords 
     for c in ("lat", "lon"):
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
