@@ -2,15 +2,12 @@
 from pathlib import Path
 import pandas as pd
 
-root = Path(".")  # assume script is run from project root
-
-all_meta   = root / "raw_data"   / "filtered_meta.tsv"
-sel_meta   = root / "raw_data"   / "selected_samples.tsv"
-geojson    = root / "data"       / "ne_countries.geojson"
-krona_dir  = root / "results"    / "krona_html"
-out_html   = root / "results"    / "final_interactive_map.html"
-
-# load metadata
+root = Path(".") 
+all_meta = root / "raw_data" / "filtered_meta.tsv"
+sel_meta = root / "raw_data" / "selected_samples.tsv"
+geojson = root / "data" / "ne_countries.geojson"
+krona_dir = root / "results" / "krona_html"
+out_html = root / "results" / "final_interactive_map.html"
 
 # load metadata, filter to amplicon (16S)
 df_all = pd.read_csv(all_meta, sep="\t", dtype=str)
@@ -26,7 +23,6 @@ counts = (df_amp.groupby(country_col)
           .size()
           .reset_index(name="count")
           .rename(columns={country_col: "country"}))
-
 
 # load selected samples
 df_sel = pd.read_csv(sel_meta, sep="\t", dtype=str)
@@ -102,5 +98,5 @@ out_html.parent.mkdir(parents=True, exist_ok=True)
 m.save(str(out_html))
 print("[ok] interactive map:", out_html)
 print("tip: serve locally to ensure krona popups open:")
-print("  cd results && python3 -m http.server 8000")
-print("  open http://localhost:8000/final_interactive_map.html")
+print(" cd results && python3 -m http.server 8000")
+print(" open http://localhost:8000/final_interactive_map.html")
