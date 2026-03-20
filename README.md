@@ -24,6 +24,15 @@ metadata.tsv
 
 All tools are listed with version in environment.yaml file
 
+The whole process can be use with a Snakefile
+````bash
+# usage:
+conda activate snakemake
+snakemake -j 8 --use-conda --rerun-incomplete
+````
+
+In case, a workflow with all steps separate is preferred, below are all required steps described with the reference to the respective script.
+
 Setting up the working environment by creating conda environment
 ````bash
 conda create -n skin_microbes
