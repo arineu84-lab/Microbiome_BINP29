@@ -3,12 +3,12 @@
 #   snakemake -j 8 --use-conda --rerun-incomplete
 
 import os
-sample_ids   = "raw_data/NCBI.skin.metagenome.sampleID.txt"
+sample_ids = "raw_data/NCBI.skin.metagenome.sampleID.txt"
 
 # natural earth → geojson 
-ne_zip       = "raw_data/ne_110m_admin_0_countries.zip"
-ne_dir       = "raw_data/ne_110m_admin_0_countries"
-ne_geojs     = "data/ne_countries.geojson"
+ne_zip = "raw_data/ne_110m_admin_0_countries.zip"
+ne_dir = "raw_data/ne_110m_admin_0_countries"
+ne_geojs = "data/ne_countries.geojson"
 
 # metadata & filtered tables
 metadata_tsv = "raw_data/metadata.tsv"
@@ -16,11 +16,11 @@ filtered_tsv = "raw_data/filtered_meta.tsv"
 selected_tsv = "raw_data/selected_samples.tsv"
 
 # results
-plots_dir    = "plots"
-fastq_dir    = "raw_data/fastq"
-db_dir       = "db/silva16s"
-map_html     = "results/map/interactive_map.html"
-krona_html   = "results/krona_html"
+plots_dir = "plots"
+fastq_dir = "raw_data/fastq"
+db_dir = "db/silva16s"
+map_html = "results/map/interactive_map.html"
+krona_html = "results/krona_html"
 
 
 rule all:
@@ -28,7 +28,6 @@ rule all:
         f"{plots_dir}/country_distribution.png",
         f"{plots_dir}/country_worldmap.png",
         map_html
-
 
 rule download_natural_earth:
     output: ne_zip
