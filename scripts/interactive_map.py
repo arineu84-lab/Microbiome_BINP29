@@ -1,73 +1,34 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import pandas as pd
-import folium
-from folium.plugins import MarkerCluster
 
-root = Path(".")
-all_meta  = root / "raw_data" / "filtered_meta.tsv"
-sel_meta  = root / "raw_data" / "selected_samples.tsv"
-krona_dir = root / "results" / "krona_html"
-out_html  = root / "results" / "map" / "interactive_map.html"
+root = Path(".")  # assume script is run from project root
+
+all_meta   = root / "raw_data"   / "filtered_meta.tsv"
+sel_meta   = root / "raw_data"   / "selected_samples.tsv"
+geojson    = root / "data"       / "ne_countries.geojson"
+krona_dir  = root / "results"    / "krona_html"
+out_html   = root / "results"    / "final_interactive_map.html"
 
 # load metadata
+
+# load metadata, filter to amplicon (16S)
 df_all = pd.read_csv(all_meta, sep="\t", dtype=str)
-for col in ("lat", "lon"):
-    df_all[col] = pd.to_numeric(df_all[col], errors="coerce")
-df_all = df_all.dropna(subset=["lat", "lon"]).copy()
 
-# 16s only
-df_all["library_strategy"] = df_all["library_strategy"].astype(str).str.lower()
-df16 = df_all[df_all["library_strategy"] == "amplicon"].copy()
+country_col = ("country_from_coords"
+    if "country_from_coords" in df_all.columns
+    else "country")
 
-# choose country column if available
-country_col = "country_from_coords" if "country_from_coords" in df16.columns else "country"
+df_amp = df_all[df_all["library_strategy"] == "AMPLICON"].copy()
 
-# colors by body_site_label
-COLOR = {
-    "hand": "#e41a1c",
-    "palm": "#ff7f00",
-    "foot": "#377eb8",
-    "face": "#984ea3",
-    "armpit": "#4daf4a",
-    "scalp": "#a65628",
-    "forearm": "#f781bf",
-    "skin_other": "#7f7f7f",
-    "other": "#cccccc",
-}
-def pick_color(label: str) -> str:
-    if not isinstance(label, str): return "#cccccc"
-    return COLOR.get(label.strip().lower(), "#cccccc")
+# count amplicon samples by country
+counts = (df_amp.groupby(country_col)
+          .size()
+          .reset_index(name="count")
+          .rename(columns={country_col: "country"}))
 
-# base map
-m = folium.Map(location=[20, 0], zoom_start=2, tiles="cartodb positron")
-folium.TileLayer("openstreetmap").add_to(m)
-folium.TileLayer("cartodb dark_matter").add_to(m)
 
-# layer: all 16s points (clustered)
-cluster = MarkerCluster(name="all 16s points (clustered)", show=True)
-for _, row in df16.iterrows():
-    lat, lon = float(row["lat"]), float(row["lon"])
-    run  = row.get("run_accession", "na")
-    body = (row.get("body_site_label") or "other").strip().lower()
-    country = row.get(country_col, row.get("country", "unknown"))
-    color = pick_color(body)
-    html = f"<b>{run}</b><br>country: {country}<br>body site: {body}"
-    folium.CircleMarker(
-        location=[lat, lon],
-        radius=5,
-        color="#333333",
-        weight=1,
-        fill=True,
-        fill_opacity=0.9,
-        fill_color=color,
-        tooltip=f"{run} ({country}, {body})",
-        popup=folium.Popup(html, max_width=320),
-    ).add_to(cluster)
-m.add_child(cluster)
-
-# layer: selected samples with krona links (3 from denmark)
-# layer: selected samples with krona links (3 from denmark)
+# load selected samples
 df_sel = pd.read_csv(sel_meta, sep="\t", dtype=str)
 for col in ("lat", "lon"):
     df_sel[col] = pd.to_numeric(df_sel[col], errors="coerce")
@@ -89,7 +50,7 @@ for _, row in df_sel.iterrows():
         # conservative fallback if relative_to() cannot be computed
         rel = f"../krona_html/{run}.krona.html"
 
-    # >>> paste this exact part <<<
+    # create anchor tag
     if krona_file.exists():
         link = f"<a href='{rel}' target='_blank'>open krona plot</a>"
     else:
@@ -117,7 +78,7 @@ for _, row in df_sel.iterrows():
 
 sel_layer.add_to(m)
 
-# legend
+# legend for selected sample colors
 legend_html = """
 <div style="
  position: fixed; bottom: 20px; left: 20px; z-index: 9999;
@@ -136,10 +97,10 @@ legend_html = """
 </div>"""
 m.get_root().html.add_child(folium.Element(legend_html))
 
-# save
+# save map
 out_html.parent.mkdir(parents=True, exist_ok=True)
 m.save(str(out_html))
 print("[ok] interactive map:", out_html)
 print("tip: serve locally to ensure krona popups open:")
 print("  cd results && python3 -m http.server 8000")
-print("  open http://localhost:8000/map/interactive_map.html")
+print("  open http://localhost:8000/final_interactive_map.html")

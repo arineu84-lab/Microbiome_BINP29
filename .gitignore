@@ -13,7 +13,7 @@ results/
 *.kreport
 notes/
 
-# Plots (optional if auto-generated)
+# Plots 
 plots/
 
 # OS files
