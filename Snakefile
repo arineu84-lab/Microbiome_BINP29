@@ -69,7 +69,6 @@ print("wrote", {output!r})
 PY
         """
 
-
 rule fetch_metadata:
     input: sample_ids
     output: metadata_tsv
@@ -100,7 +99,6 @@ rule filter_columns:
         python scripts/filter_columns.py
         """
 
-
 rule country_distribution:
     input: filtered_tsv, ne_geojs
     output: f"{plots_dir}/country_distribution.png"
@@ -120,7 +118,6 @@ rule sequence_type_map:
         mkdir -p {plots_dir}
         python scripts/sequence_type.py
         """
-
 
 rule select_samples:
     input: filtered_tsv
@@ -143,7 +140,6 @@ rule pull_fastq:
         bash scripts/pull_fastq.sh
         touch {output}
         """
-
 
 rule build_kraken_silva:
     output: touch(f"{db_dir}/.built")
@@ -169,7 +165,6 @@ rule bracken_build:
         bracken-build -d {db_dir} -t {threads} -k 35 -l 150
         touch {output}
         """
-
 
 rule kraken2_and_krona_prep:
     input:
@@ -235,7 +230,6 @@ rule krona_lineage:
         fi
         touch {output}
         """
-
 
 rule interactive_map:
     input:
