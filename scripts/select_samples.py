@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# select_samples.py
+
 import argparse
 from pathlib import Path
 import pandas as pd
@@ -6,17 +8,43 @@ import pandas as pd
 meta_file = Path("raw_data/filtered_meta.tsv")
 out_file  = Path("raw_data/selected_samples.tsv")
 
+NORDIC_BBOXES = {
+    "denmark": {"lat_min": 54.3, "lat_max": 58.1, "lon_min": 7.9,  "lon_max": 15.6},  # incl. Bornholm
+    "sweden":  {"lat_min": 55.0, "lat_max": 69.5, "lon_min": 11.0, "lon_max": 24.5},
+    "norway":  {"lat_min": 58.0, "lat_max": 71.5, "lon_min": 4.5,  "lon_max": 31.5},  # mainland
+    "finland": {"lat_min": 59.0, "lat_max": 70.5, "lon_min": 19.0, "lon_max": 32.5},
+}
+
+def _coords_in_any_nordic(df, lat_col="lat", lon_col="lon"):
+    """Return boolean mask: True if point falls inside any Nordic bbox."""
+    import numpy as np
+    mask_any = np.zeros(len(df), dtype=bool)
+    for bbox in NORDIC_BBOXES.values():
+        m = (
+            df[lat_col].between(bbox["lat_min"], bbox["lat_max"], inclusive="both")
+            & df[lon_col].between(bbox["lon_min"], bbox["lon_max"], inclusive="both")
+        )
+        mask_any |= m
+    return mask_any
+
 def pick_from(df, country, n, strategy):
-    """return up to n rows from df for country (case-insensitive), coords present, strategy match by substring"""
-    if "country_from_coords" in df.columns:
-        mask_country = df["country_from_coords"].str.lower() == country.lower()
-    else:
-        mask_country = df["country"].str.lower() == country.lower()
+    """
+    Return up to n rows selected ONLY by coordinates inside the Nordic region,
+    with non-null lat/lon and a library_strategy matching 'strategy' (substring, case-insensitive).
+
+    NOTE: 'country' argument is intentionally ignored to enforce coordinate-only selection.
+    """
+    # coords present
     mask_coords = df["lat"].notna() & df["lon"].notna()
-    # match strategy by substring, all lowercase
+
+    # in any Nordic bbox (Denmark, Sweden, Norway, Finland)
+    mask_nordics = _coords_in_any_nordic(df, "lat", "lon")
+
+    # match strategy by substring (main() already lowercases df['library_strategy'])
     mask_strategy = df["library_strategy"].str.contains(strategy.lower(), na=False)
-    subset = df[mask_country & mask_coords & mask_strategy]
-    # deterministic: first n rows
+
+    subset = df[mask_coords & mask_nordics & mask_strategy]
+
     return subset.head(n).copy()
 
 def main():

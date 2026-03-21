@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# kraken2.py 
+
 import os
 import glob
 import subprocess

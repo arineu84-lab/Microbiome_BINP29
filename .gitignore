@@ -1,26 +1,54 @@
-# Databases
-db/
-data/
-
-# Raw sequencing data
-raw_data/
-
-# Results
-results/
-
-# Large intermediate files
-*.kraken
-*.kreport
-notes/
-
 # Plots 
 plots/
 
-# OS files
-.DS_Store
-
-# conda environment and hidden files
-envs/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
 .venv/
+envs/
+venv/
 .snakemake/
-app.py
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Data produced locally or heavy analysis outputs
+raw_data/
+results/
+data/
+db/
+tmp/
+cache/
+logs/
+
+# Large archives and intermediates
+*.zip
+*.gz
+*.bz2
+*.xz
+*.tar
+*.7z
+notes/
+
+# data bases
+silva16s/
+silva*/
+kraken*/
+bracken*/
+krona_taxonomy/
+
+# some other files, in case user does not specify
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.bam
+*.sam
+*.cram
+*.sra

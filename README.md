@@ -45,22 +45,31 @@ Create an empty output file
 
 Fetching all meta data and save into new tsv file
 ````bash
-first=1
-while read ID; do
-    echo "Fetching metadata for $ID ..."
-    if [ $first -eq 1 ]; then
-        # First ID → keep the header
-        curl -s "https://www.ebi.ac.uk/ena/portal/api/search?result=read_run&query=sample_accession=${ID}&fields=all&format=tsv" \
-            >> metadata.tsv
-        first=0
-    else
-        # All other IDs → drop the header (tail -n +2)
-        curl -s "https://www.ebi.ac.uk/ena/portal/api/search?result=read_run&query=sample_accession=${ID}&fields=all&format=tsv" \
-            | tail -n +2 >> metadata.tsv
-    fi
-done < NCBI.skin.metagenome.sampleID.txt
+mkdir -p raw_data && \
+first=1 && \
+awk -v n=200 '
+  { ids[NR%n ? ++c : ++c]=$0 } 
+  NR % n == 0 { print ids[c]; c=0; delete ids }
+  END { for (i=1;i<=c;i++) print ids[i] }
+' raw_data/NCBI.skin.metagenome.sampleID.txt | \
+while IFS= read -r block; do \
+  q=$(printf "%s\n" "$block" | paste -sd" OR sample_accession=" - | sed 's/^/sample_accession=/'); \
+  if [ $first -eq 1 ]; then \
+    curl -s -X POST "https://www.ebi.ac.uk/ena/portal/api/search" \
+      --data-urlencode "result=read_run" \
+      --data-urlencode "query=$q" \
+      --data-urlencode "fields=all" \
+      --data-urlencode "format=tsv"; \
+    first=0; \
+  else \
+    curl -s -X POST "https://www.ebi.ac.uk/ena/portal/api/search" \
+      --data-urlencode "result=read_run" \
+      --data-urlencode "query=$q" \
+      --data-urlencode "fields=all" \
+      --data-urlencode "format=tsv" | tail -n +2; \
+  fi; \
+done > raw_data/metadata.tsv
 ````
-OBS: Here only meta data from 29k samples were used!
 
 Get column numbers of NCBI metadata
 ````bash
@@ -75,7 +84,7 @@ awk -F'\t' '
   ($161 >= 55 && $161 <= 69) && ($133 >= 11 && $133 <= 24)
 ' raw_data/metadata.tsv | wc -l
 ````
-This showed no match for Sweden
+This showed only 5 matches for Sweden
 
 Therefore, it was decided to check which and how many samples are around "Sweden" found in the dataset
 ````bash
@@ -94,11 +103,13 @@ NR>1 &&
 ' raw_data/metadata.tsv | sort | uniq -c | sort -nr
 ````
 Outcome:
-- 315 Denmark: Aarhus
-- 62 Finland
-- 60 Finland: North Karelia
-- 52 Russia: Republic of Karelia, Pitkaranta
-- total 489 samples
+    5 Finland
+    4 Denmark: Aarhus
+    3 Denmark: Copenhagen
+    2 Denmark: Copenhagen, Gentofte Hospital
+    1 Norway: Oslo, Ostfold, Sweden, Solna
+    1 Finland: Helsinki
+- total 16 samples
 
 Based on these findings, other samples were selected. While samples from neighbour countries were available, the interest was on the skin microbiome with focus on hand and palm. These body locations were not found for these countries, thus downstream analysis was performed with other european countries. However, based on the coordinates and body_sites, this selection can always be adapted to the research question. 
 
@@ -145,6 +156,15 @@ This script assigns a country to each sample using its coordinates
 ````bash
 python scripts/select_samples.py 
 
+# sanity checks
+# Confirm file exists and row count 
+wc -l raw_data/selected_samples.tsv
+# list column names
+head -n 1 raw_data/selected_samples.tsv | tr '\t' '\n' | nl -ba
+
+# Verify all selected rows have coordinates
+awk -F'\t' 'NR>1 { if ($5=="" || $6=="") bad=1 } END { if (bad) print "Missing coords found"; else print "All rows have coords"}' raw_data/selected_samples.tsv
+
 # download the selected fastq files using bash script (in data/fastq)
 # write script and make it executable
 chmod +x pull_fastq.sh
@@ -155,7 +175,7 @@ bash scripts/pull_fastq.sh
 conda install bioconda::kraken2
 conda install bioconda::bracken # Bayesian Reestimation of Abundance with KrakEN
 conda install bioconda::krona
-mkdir results/kraken2 results/bracken results/krona 
+mkdir results results/kraken2 results/bracken results/krona 
 
 # Also need a SILVA data base to be created and run properly
 mkdir -p db
@@ -201,6 +221,22 @@ Run script for interactive map using folium
 pip install folium
 python scripts/interactive_map.py 
 
+# this is what should open in terminal
+# cd results && python3 -m http.server 8000
+ # open http://localhost:8000/final_interactive_map.html
+
 # download html files to local computer
 scp -r user@server/results/ .
+````
+
+#================= Streamlit application =========================
+
+Install dependencies
+````bash
+conda create -n skinmicromap python=3.11 -y
+conda activate skinmicromap
+pip install -r requirements.txt
+
+# run
+streamlit run app.py
 ````

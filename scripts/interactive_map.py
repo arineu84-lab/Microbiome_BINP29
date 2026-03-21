@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# interactive_map.py 
+
 from pathlib import Path
 import os
 import pandas as pd
@@ -104,7 +106,7 @@ cluster_all = MarkerCluster(disableClusteringAtZoom=6).add_to(all_layer)
 
 for _, row in df_amp_coords.iterrows():
     sid = row.get(id_col, "")
-    lat, lon = float(row[lat_col]), float(row[lon_col]])
+    lat, lon = float(row[lat_col]), float(row[lon_col])
     body = (row.get("body_site_label") or "other").strip().lower()
     country = row.get(country_col, row.get("country", "unknown"))
 
@@ -134,7 +136,7 @@ cluster_sel = MarkerCluster(disableClusteringAtZoom=6).add_to(sel_layer)
 
 for _, row in df_sel.iterrows():
     sid = row[id_col]
-    lat, lon = float(row[lat_col]), float(row[lon_col]])
+    lat, lon = float(row[lat_col]), float(row[lon_col])
     body = (row.get("body_site_label") or "other").strip().lower()
     country = row.get(country_col, row.get("country", "unknown"))
     color = pick_color(body)

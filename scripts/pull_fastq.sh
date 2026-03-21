@@ -1,4 +1,5 @@
 #!/bin/bash
+# pull_fast.sh
 
 input_file="raw_data/selected_samples.tsv"
 metadata="raw_data/metadata.tsv"

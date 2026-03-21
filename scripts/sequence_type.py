@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# sequence_type.py 
 
 import os
 import json
@@ -74,7 +75,6 @@ world = gpd.GeoDataFrame(records, crs="EPSG:4326")
 print(f"[INFO] Loaded {len(world)} country polygons.")
 
 # assign points to country polygon
-
 print("[INFO] Spatial join: assigning samples to countries...")
 joined = gpd.sjoin(points, world, how="left", predicate="within")
 

@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# krona_bracken.py 
+
 import os
 import sys
 import subprocess
