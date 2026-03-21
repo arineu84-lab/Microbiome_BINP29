@@ -236,7 +236,10 @@ Install dependencies
 conda create -n skinmicromap python=3.11 -y
 conda activate skinmicromap
 pip install -r requirements.txt
+````
+All information and utensils to run the app are found in **pages** , **utils** and **examples**
 
+````bash
 # run
 streamlit run app.py
 ````
