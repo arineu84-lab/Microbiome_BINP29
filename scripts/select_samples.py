@@ -9,9 +9,9 @@ meta_file = Path("raw_data/filtered_meta.tsv")
 out_file  = Path("raw_data/selected_samples.tsv")
 
 NORDIC_BBOXES = {
-    "denmark": {"lat_min": 54.3, "lat_max": 58.1, "lon_min": 7.9,  "lon_max": 15.6},  # incl. Bornholm
+    "denmark": {"lat_min": 54.3, "lat_max": 58.1, "lon_min": 7.9,  "lon_max": 15.6},  
     "sweden":  {"lat_min": 55.0, "lat_max": 69.5, "lon_min": 11.0, "lon_max": 24.5},
-    "norway":  {"lat_min": 58.0, "lat_max": 71.5, "lon_min": 4.5,  "lon_max": 31.5},  # mainland
+    "norway":  {"lat_min": 58.0, "lat_max": 71.5, "lon_min": 4.5,  "lon_max": 31.5},  
     "finland": {"lat_min": 59.0, "lat_max": 70.5, "lon_min": 19.0, "lon_max": 32.5},
 }
 
@@ -40,7 +40,7 @@ def pick_from(df, country, n, strategy):
     # in any Nordic bbox (Denmark, Sweden, Norway, Finland)
     mask_nordics = _coords_in_any_nordic(df, "lat", "lon")
 
-    # match strategy by substring (main() already lowercases df['library_strategy'])
+    # match strategy by substring 
     mask_strategy = df["library_strategy"].str.contains(strategy.lower(), na=False)
 
     subset = df[mask_coords & mask_nordics & mask_strategy]
@@ -57,16 +57,16 @@ def main():
     args = ap.parse_args()
 
     df = pd.read_csv(meta_file, sep="\t", dtype=str)
-    # normalize
+    # normalise
     for col in ("lat","lon"):
         df[col] = pd.to_numeric(df.get(col), errors="coerce")
     df["library_strategy"] = df["library_strategy"].astype(str).str.lower()
     df["country"] = df.get("country", "").astype(str)
 
-    # 1) try primary country
+    # try primary country
     picked = pick_from(df, args.country, args.n, args.strategy)
 
-    # 2) try fallbacks if needed
+    # try fallbacks if needed
     if len(picked) < args.n and args.fallback.strip():
         for c in [c.strip() for c in args.fallback.split(",") if c.strip()]:
             if len(picked) >= args.n:
@@ -76,7 +76,7 @@ def main():
             if not extra.empty:
                 picked = pd.concat([picked, extra], ignore_index=True)
 
-    # 3) last resort: any country with coords & amplicon
+    # last resort: any country with coords & amplicon
     if len(picked) < args.n:
         need = args.n - len(picked)
         mask_coords = df["lat"].notna() & df["lon"].notna()

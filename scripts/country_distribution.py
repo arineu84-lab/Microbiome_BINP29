@@ -35,7 +35,7 @@ print(f"[INFO] Using {len(df)} rows with valid coordinates.")
 # IDs to preserve
 id_cols = [c for c in ["run_accession", "sample_accession"] if c in df.columns]
 
-# build the data fram for geo location
+# build data frame for geo location
 points = gpd.GeoDataFrame(
     df[id_cols + ["lat", "lon"]],
     geometry=[Point(x, y) for x, y in zip(df["lon"], df["lat"])],

@@ -32,7 +32,6 @@ def main():
         if c in df.columns:
             df[c] = pd.to_numeric(df[c], errors="coerce")
 
-    # build a lowercase catch-all text field to detect body-site keywords
     text_cols = [c for c in df.columns if c not in ["lat", "lon", "run_accession", "sample_accession", "country"]]
     df["_concat"] = df[text_cols].fillna("").agg(" ".join, axis=1).str.lower()
 

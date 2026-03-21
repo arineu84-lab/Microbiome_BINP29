@@ -13,7 +13,7 @@ threads = 8
 input_dir = "raw_data/fastq"
 readlength = 150
 
-# Restrict to selected_samples file
+# Restrict to selected_samples 
 selected_tsv = "raw_data/selected_samples.tsv"
 selected_columns = "run_accession"
 

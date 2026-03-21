@@ -1,0 +1,3 @@
+run_accession    sample_accession    country    host_body_site    library_strategy    lat    lon
+SRR_DEMO_001    SAMN_DEMO_001    Denmark: Aarhus    hand    amplicon    56.15    10.20
+SRR_DEMO_002    SAMN_DEMO_002    Finland: Helsinki    palm    amplicon    60.17    24.94

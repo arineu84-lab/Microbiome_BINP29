@@ -200,7 +200,7 @@ def main():
         print("[ERROR] No samples found in either:", krona_tsv_dir, "or", kraken2_dir)
         return
 
-# Restrict to selected samples if available (analysis/selected_samples.tsv)
+# Restrict to selected samples if available 
     selected_tsv = Path("analysis") / "selected_samples.tsv"
     if selected_tsv.exists():
         try:
