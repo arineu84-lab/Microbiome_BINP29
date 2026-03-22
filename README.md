@@ -78,17 +78,16 @@ Outcome:
 
 Based on these findings, other samples were selected. While samples from neighbour countries were available, the interest was on the skin microbiome with focus on hand and palm. Based on the coordinates and body_sites, this selection can always be adapted to the research question. 
 
-=========================================================
+============ Actual analysis pipeline of metagenomic data =================================
 1. Filter data set 
 
 Install the world package from natural earth (required for geopandas)
 ````bash
 wget https://naciscdn.org/naturalearth/110m/cultural/ne_110m_admin_0_countries.zip
 unzip ne_110m_admin_0_countries.zip
-````
-write python script to filter meta data for certain selected columns
-e.g. longitude and latitude coordinates and well as body site
-````bash
+
+# Python script to filter meta data for certain selected columns
+# e.g. longitude and latitude coordinates and well as body site
 python scripts/filter_columns.py 
 
 # check that all columns contain something
