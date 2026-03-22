@@ -33,10 +33,8 @@ conda create -n skin_microbes
 Create an empty output file
 ````bash
 > metadata.tsv
-````
 
-Fetching all meta data and save into new tsv file
-````bash
+#Fetching all meta data and save into new tsv file
 scripts/fetch_metadata.sh
 
 #Get column numbers of NCBI metadata
@@ -78,7 +76,7 @@ Outcome:
     1 Finland: Helsinki
 - total 16 samples
 
-Based on these findings, other samples were selected. While samples from neighbour countries were available, the interest was on the skin microbiome with focus on hand and palm. These body locations were not found for these countries, thus downstream analysis was performed with other european countries. However, based on the coordinates and body_sites, this selection can always be adapted to the research question. 
+Based on these findings, other samples were selected. While samples from neighbour countries were available, the interest was on the skin microbiome with focus on hand and palm. Based on the coordinates and body_sites, this selection can always be adapted to the research question. 
 
 =========================================================
 1. Filter data set 
