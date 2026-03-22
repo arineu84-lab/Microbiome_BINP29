@@ -37,34 +37,9 @@ Create an empty output file
 
 Fetching all meta data and save into new tsv file
 ````bash
-mkdir -p raw_data && \
-first=1 && \
-awk -v n=200 '
-  { ids[NR%n ? ++c : ++c]=$0 } 
-  NR % n == 0 { print ids[c]; c=0; delete ids }
-  END { for (i=1;i<=c;i++) print ids[i] }
-' raw_data/NCBI.skin.metagenome.sampleID.txt | \
-while IFS= read -r block; do \
-  q=$(printf "%s\n" "$block" | paste -sd" OR sample_accession=" - | sed 's/^/sample_accession=/'); \
-  if [ $first -eq 1 ]; then \
-    curl -s -X POST "https://www.ebi.ac.uk/ena/portal/api/search" \
-      --data-urlencode "result=read_run" \
-      --data-urlencode "query=$q" \
-      --data-urlencode "fields=all" \
-      --data-urlencode "format=tsv"; \
-    first=0; \
-  else \
-    curl -s -X POST "https://www.ebi.ac.uk/ena/portal/api/search" \
-      --data-urlencode "result=read_run" \
-      --data-urlencode "query=$q" \
-      --data-urlencode "fields=all" \
-      --data-urlencode "format=tsv" | tail -n +2; \
-  fi; \
-done > raw_data/metadata.tsv
-````
+scripts/fetch_metadata.sh
 
-Get column numbers of NCBI metadata
-````bash
+#Get column numbers of NCBI metadata
 head -n2 raw_data/metadata.tsv | sed 's/\t/\n/g' | nl -ba
 ````
 
