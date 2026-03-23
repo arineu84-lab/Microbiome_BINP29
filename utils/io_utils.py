@@ -11,9 +11,6 @@ def read_metadata_tsv(file) -> pd.DataFrame:
     return pd.read_csv(file, sep="\t", low_memory=False)
 
 def fetch_ena_metadata(sample_ids: List[str], result="read_run", fields="all") -> pd.DataFrame:
-    """
-    Mimics your bash loop: keeps header once, concatenates subsequent results.
-    """
     frames = []
     for i, sid in enumerate(tqdm(sample_ids, desc="Fetching ENA metadata")):
         params = {
