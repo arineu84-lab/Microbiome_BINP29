@@ -11,9 +11,7 @@ def load_world_polygons(source: str | None = None) -> gpd.GeoDataFrame:
         world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
     else:
         world = gpd.read_file(source)
-    # Normalize country name column
     if 'name' not in world.columns:
-        # Natural Earth 'admin' column often holds the country names
         if 'admin' in world.columns:
             world = world.rename(columns={'admin': 'name'})
     return world.to_crs(epsg=4326)
